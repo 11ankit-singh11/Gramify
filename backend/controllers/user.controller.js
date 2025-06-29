@@ -42,6 +42,19 @@ export const login = async (req, res) => {
             return res.status(401).json({message: 'Invalid email or password',success: false});
         }
 
+        
+        const token = await jwt.sign({userId: user._id}, process.env.SECRET_KEY, {expiresIn: '1d'});// creating a token with userId and secret key and expires in 1 day , you dont need to login as long as the token is valid in the cookie
+        
+  // populate each post if in the posts array
+        const populatedPosts = await Promise.all(
+            user.posts.map( async (postId) => {
+                const post = await Post.findById(postId);
+                if(post.author.equals(user._id)){
+                    return post;
+                }
+                return null;
+            })
+        )
         user = {
             _id: user._id,
             username: user.username,
@@ -50,12 +63,12 @@ export const login = async (req, res) => {
             bio: user.bio,
             followers: user.followers,
             following: user.following,
-            posts: user.posts,
-
+            posts: populatedPosts
         }
-        const token = await jwt.sign({userId: user._id}, process.env.SECRET_KEY, {expiresIn: '1d'});// creating a token with userId and secret key and expires in 1 day , you dont need to login as long as the token is valid in the cookie
+
+
         return res.cookie('token', token, {httpOnly: true,sameSite:'strict',maxAge:1*24*60*60*1000}).status(200).json({
-            message: `Welcome back ${user.username}`,success: true});
+            message: `Welcome back ${user.username}`,success: true , user });
     } 
     catch (error) {
         console.log(error);
@@ -74,7 +87,7 @@ export const logout = async (_, res) => {
 export const getProfile = async (req, res) => {
     try {
         const userId = req.params.id;
-        let user = await user.findById(userId);
+        let user = await User.findById(userId).select("-password");// selecting all fields except password
         return res.status(200).json({
             user,
             success: true,

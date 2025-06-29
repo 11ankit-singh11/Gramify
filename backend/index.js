@@ -4,7 +4,8 @@ import cookieParser from 'cookie-parser';
 import dotenv from "dotenv";
 import connectDB from './utils/db.js';// here we are using db.js not just db, because db.js is in utils folder
 import userRoute from './routes/user.route.js';
-// and we are importing userRoute from routes folder, not just user, because user is in routes folder
+import postRoute from "./routes/post.route.js";
+import messageRoute from "./routes/message.route.js";
 dotenv.config({});
 const app = express();  
 
@@ -30,6 +31,8 @@ app.use(cors(corsOptions)); // Use CORS middleware with options
 // apis will be here 
 
 app.use("/api/v1/user", userRoute);
+app.use("/api/v1/post", postRoute);
+app.use("/api/v1/message", messageRoute);
 
 
 
